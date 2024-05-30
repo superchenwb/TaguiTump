@@ -559,18 +559,18 @@ if exist "%flow_file%.js" (
 
 rem start R process if integration file is created during parsing
 if exist "tagui_r\tagui_r.in" (
-        start "R Engine" /min cmd /c Rscript tagui_r\tagui_r.R 2^>^&1 ^| tee -a tagui_r\tagui_r.log
+        start "R Engine" /B /min cmd /c Rscript tagui_r\tagui_r.R 2^>^&1 ^| tee -a tagui_r\tagui_r.log
 )
 
 rem start python process if integration file is created during parsing
 if exist "tagui_py\tagui_py.in" (
-        start "Python Engine" /min cmd /c python -u tagui_py\tagui_py.py 2^>^&1 ^| tee -a tagui_py\tagui_py.log
+        start "Python Engine" /B /min cmd /c python -u tagui_py\tagui_py.py 2^>^&1 ^| tee -a tagui_py\tagui_py.log
 )
 
 rem start sikuli process if integration file is created during parsing
 if exist "tagui.sikuli\tagui_sikuli.in" (
 	rem echo [starting sikuli process] | tee -a "%flow_file%.log"
-	start "SikuliX Engine" /min cmd /c java -jar sikulix\sikulix.jar -r tagui.sikuli -d 3 2^>^&1 ^| tee -a tagui.sikuli\tagui.log
+	start "SikuliX Engine" /B /min cmd /c java -jar sikulix\sikulix.jar -r tagui.sikuli -d 3 2^>^&1 ^| tee -a tagui.sikuli\tagui.log
 )
 
 rem start chrome processes if integration file is created during parsing
@@ -617,7 +617,7 @@ if exist "tagui_chrome.in" (
 	)
 
 	rem launch php process to manage chrome websocket communications
-	start "Chrome Engine" /min cmd /c php -q tagui_chrome.php !ws_url! ^| tee -a tagui_chrome.log
+	start "Chrome Engine" /B /min cmd /c php -q tagui_chrome.php !ws_url! ^| tee -a tagui_chrome.log
 
 rem end of if block to start chrome processes
 )
