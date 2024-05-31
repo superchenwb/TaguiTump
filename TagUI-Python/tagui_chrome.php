@@ -44,6 +44,7 @@ if ($tagui_count == $temp_count) {usleep($scan_period); continue;} else $tagui_c
 
 // otherwise send input intent to chrome websocket
 echo "[tagui] INPUT  - \n" . "[" . $tagui_count . "] " . $tagui_intent . "\n";
+
 try {
 $client->send($tagui_intent); $intent_result_string = ""; // keep reading until chrome replies with message 
 } catch (Exception $e) {}
@@ -52,15 +53,27 @@ while ($intent_result_string == "") {try {$intent_result_string = trim($client->
         $intent_result_string = '{"method": "Inspector.detached", "result": {"result": {"type": "string", "value": "target_closed"}}}';
     }
 }}
-
+try {
 // retrieve message a second time for some Target methods as the real message is the second incoming message
 if (strpos($tagui_intent,'Target.sendMessageToTarget') !== false) $intent_result_string = trim($client->receive());
 else if (strpos($tagui_intent,'Target.attachToTarget') !== false) $intent_result_string = trim($client->receive());
 else if (strpos($tagui_intent,'Target.detachFromTarget') !== false) $intent_result_string = trim($client->receive());
-
+} catch (Exception $e) {
+    if ($e instanceof \WebSocket\ConnectionException) {
+        $intent_result_string = '{"method": "Inspector.detached", "result": {"result": {"type": "string", "value": "target_closed"}}}';
+    }
+}
 // ignore irrelevant DOM.setChildNodes events received when using DOM.querySelector to get NodeId for upload step
 // and ignore DOM. events received after using DOM.setFileInputFiles in upload step, before DOM.disable kicks in
-while (strpos($intent_result_string,'{"method":"DOM.') !== false) {$intent_result_string = trim($client->receive());}
+while (strpos($intent_result_string,'{"method":"DOM.') !== false) {
+    try {
+        $intent_result_string = trim($client->receive());
+    } catch (Exception $e) {
+        if ($e instanceof \WebSocket\ConnectionException) {
+            $intent_result_string = '{"method": "Inspector.detached", "result": {"result": {"type": "string", "value": "target_closed"}}}';
+        }
+    }
+}
 
 // save intent_result to interface out-file
 echo "[tagui] OUTPUT - \n" . "[" . $tagui_count . "] " . $intent_result_string . "\n\n";
@@ -68,6 +81,7 @@ file_put_contents('tagui_chrome.out',"[" . $tagui_count . "] " . $intent_result_
 
 // write to interface out-file to signal finish listening
 echo "[tagui] FINISH - stopped listening\n";
+usleep(200000);
 file_put_contents('tagui_chrome.out','[0] FINISH');
 
 ?>
